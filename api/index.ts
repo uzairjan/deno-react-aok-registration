@@ -1,29 +1,22 @@
-import { Application, Router  } from "https://deno.land/x/oak/mod.ts";
-import { jwtMiddlewareApplication } from "https://raw.githubusercontent.com/halvardssm/oak-middleware-jwt/master/mod.ts"
-import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
+import { Application, Router, RouterContext } from "https://deno.land/x/oak@v5.0.0/mod.ts";
+import "https://deno.land/x/dotenv@v0.4.1/load.ts";
+import { login, register } from './routes/routes.ts';
 
-const app = new Application();
+const app    = new Application();
 const router = new Router();
-
-
-
-app.use(router.routes());
-app.use(router.allowedMethods());
-
-router.post('/api/register', async (ctx) => {
-    const body = await ctx.request.body();
-    const values = body.value;
-    ctx.response.body = values;
-});
-
+router
+    .post('/api/login',login)
+    .post('/api/register',register);
 
 app.use(async (ctx, next) => {
     await next();
     console.log(`${ctx.request.method} ${ctx.request.url}`);
 });
-
-// app.use((ctx) => {
-//     ctx.response.body = "Hello world";
-// });`
+app.addEventListener('error', evt => {
+    console.log(evt.error);
+ });
+app.use(router.routes());
+app.use(router.allowedMethods());
 
 await app.listen({port:8000});
+console.log("Server is listening on port: 8000");
