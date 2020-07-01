@@ -8,7 +8,6 @@ import db from './../database/config.ts';
 //define user schema
 interface userSchema {
     _id: { $oid: string },
-    username: string,
     email: string,
     password: string
 
@@ -26,27 +25,41 @@ export const register = async (ctx: RouterContext) => {
             ctx.response.status = 400;
             ctx.response.body = { "error": "Please provide details to login" };
         } else {
-          await  users.findOne(
-                $or :[
-                    {
-                        email: email
-                    },
-                    {
-                        username : username
-                    }
-                ]
-            ).then(user =>{
+            const user = await users.findOne({ email: email });
+            if (user) {
+                ctx.response.status == 401;
+                ctx.response.body = { "error": "Email already taken" };
+            } else {
+                if ("email" in body.value) {
+                    ctx.response.status = 400;
+                    ctx.response.body = { "error": "Email is required " };
+                    return
+                } else if ("password" in  body.value) {
+                    if (password.length < 5) {
+                        ctx.response.status = 400;
+                        ctx.response.body = { "error": "password must greater than 5 characters" };
+                        return
+                    } 
+                }else{
+                    ctx.response.status = 400;
+                    ctx.response.body = { "error": "password is required " };
+                    return
+                }
                 
-            });
+                    const user = await users.insertOne({
+                        "username": username,
+                        "email": email,
+                        "password": password
+                    });
+                    ctx.response.body = user;
+                    return;
+            }
         }
-
-
     } catch (error) {
         ctx.response.status = 500;
         ctx.response.body = { err: error.toString() };
     }
 }
-
 export const login = async (ctx: RouterContext) => {
     const body = await ctx.request.body();
     console.log("i am register");
